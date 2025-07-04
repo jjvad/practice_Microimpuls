@@ -153,28 +153,35 @@ result_df = new_df.groupby('Жанр', as_index=False).agg({'Просмотры'
 result_df.sort_values("Конверсия", ascending=False).iloc[1:11]
 
 #ID товаров популярных по кликам и просмотрам
-params = dict(
-    date1=date_from,
-    date2=date_to,
-    ids=id_counter,
-    metrics='ym:s:visits',
-    dimensions='ym:s:productID'
-)
-req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+def get_ids(date1, date2):
+    params = dict(
+        date1=date1,
+        date2=date2,
+        ids=id_counter,
+        metrics='ym:s:visits',
+        dimensions='ym:s:productID'
+    )
+    req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+    df = pd.read_csv(StringIO(req.text))
+    df.sort_values("Визиты", ascending=False)['ID товара'].iloc[1:16]
+    vis_df = df
 
-df = pd.read_csv(StringIO(req.text))
+    params = dict(
+        date1=date1,
+        date2=date2,
+        ids=id_counter,
+        metrics='ym:s:pageviews',
+        dimensions='ym:s:productID'
+    )
+    req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+    df = pd.read_csv(StringIO(req.text))
+    df.sort_values("Просмотры", ascending=False)['ID товара'].iloc[1:16]
+    views_df = df
 
-df.sort_values("Визиты", ascending=False).iloc[1:31]
+    output_ids = []
 
-params = dict(
-    date1=date_from,
-    date2=date_to,
-    ids=id_counter,
-    metrics='ym:s:pageviews',
-    dimensions='ym:s:productID'
-)
-req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
-
-df = pd.read_csv(StringIO(req.text))
-
-df.sort_values("Просмотры", ascending=False).iloc[1:31]
+    for i in range(len(views_df)):
+        output_ids.append(vis_df[i])
+        output_ids.append(views_df[i])
+    output_ids = list(set(output_ids))
+    return output_ids
