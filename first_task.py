@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 from io import StringIO
-from config import API_TOKEN
+from config import API_TOKEN, id_counter
 
 API_URL = 'https://api-metrika.yandex.ru/stat/v1/data.csv'
 
@@ -15,7 +15,7 @@ date_to = "today"
 params = dict(
     date1=date_from,
     date2=date_to,
-    ids='61201573',
+    ids=id_counter,
     metrics='ym:s:visits',
     dimensions='ym:s:productName'
 )
@@ -29,7 +29,7 @@ df.sort_values("Визиты", ascending=False).iloc[1:11]
 params = dict(
     date1=date_from,
     date2=date_to,
-    ids='61201573',
+    ids=id_counter,
     metrics='ym:s:pageviews',
     dimensions='ym:s:productName'
 )
@@ -43,7 +43,7 @@ df.sort_values("Просмотры", ascending=False).iloc[1:11]
 params = dict(
     date1=date_from,
     date2=date_to,
-    ids='61201573',
+    ids=id_counter,
     metrics='ym:s:visits',
     dimensions='ym:s:productCategoryLevel1'
 )
@@ -70,7 +70,7 @@ result_df.sort_values("Визиты", ascending=False).iloc[1:11]
 params = dict(
     date1=date_from,
     date2=date_to,
-    ids='61201573',
+    ids=id_counter,
     metrics='ym:s:pageviews',
     dimensions='ym:s:productCategoryLevel1'
 )
@@ -97,7 +97,7 @@ result_df.sort_values("Просмотры", ascending=False).iloc[1:11]
 params = dict(
     date1=date_from,
     date2=date_to,
-    ids='61201573',
+    ids=id_counter,
     metrics='ym:s:visits, ym:s:productImpressionsUniq',
     dimensions='ym:s:productName'
 )
@@ -107,3 +107,74 @@ df = pd.read_csv(StringIO(req.text))
 
 df['Конверсия'] = df['Посетители, посмотревшие товар']/df['Визиты']
 df.sort_values('Конверсия', ascending=False)[['Название товара', 'Конверсия']].iloc[1:11]
+
+#Топ 10 фильмов по просмотревшим пользователям
+params = dict(
+    date1=date_from,
+    date2=date_to,
+    ids=id_counter,
+    metrics='ym:s:productImpressionsUniq',
+    dimensions='ym:s:productName'
+)
+req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+
+df = pd.read_csv(StringIO(req.text))
+
+df.sort_values("Посетители, посмотревшие товар", ascending=False).iloc[1:11]
+
+
+#Топ жанров по конверсии(средняя по всем записям жанра)
+params = dict(
+    date1=date_from,
+    date2=date_to,
+    ids=id_counter,
+    metrics='ym:s:pageviews, ym:s:visits, ym:s:productImpressionsUniq',
+    dimensions='ym:s:productCategoryLevel1'
+)
+req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+
+df = pd.read_csv(StringIO(req.text))
+
+df['Конверсия'] = df['Посетители, посмотревшие товар']/df['Визиты']
+
+new_rows = []
+for index, row in df.iterrows():
+    genres = row['Категория товара, ур. 1'].split(', ')
+    if len(genres) > 1:
+        for genre in genres:
+            new_rows.append({'Жанр': genre.strip(), 'Просмотры': row['Просмотры'], 'Конверсия': row['Конверсия']})
+    else:
+        new_rows.append({'Жанр': row['Категория товара, ур. 1'], 'Просмотры': row['Просмотры'], 'Конверсия': row['Конверсия']})
+
+new_df = pd.DataFrame(new_rows)
+result_df = new_df.groupby('Жанр', as_index=False).agg({'Просмотры': 'sum', 'Конверсия': 'mean'})
+
+
+result_df.sort_values("Конверсия", ascending=False).iloc[1:11]
+
+#ID товаров популярных по кликам и просмотрам
+params = dict(
+    date1=date_from,
+    date2=date_to,
+    ids=id_counter,
+    metrics='ym:s:visits',
+    dimensions='ym:s:productID'
+)
+req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+
+df = pd.read_csv(StringIO(req.text))
+
+df.sort_values("Визиты", ascending=False).iloc[1:31]
+
+params = dict(
+    date1=date_from,
+    date2=date_to,
+    ids=id_counter,
+    metrics='ym:s:pageviews',
+    dimensions='ym:s:productID'
+)
+req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
+
+df = pd.read_csv(StringIO(req.text))
+
+df.sort_values("Просмотры", ascending=False).iloc[1:31]
