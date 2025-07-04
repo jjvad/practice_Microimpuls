@@ -23,7 +23,7 @@ req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API
 
 df = pd.read_csv(StringIO(req.text))
 
-df.sort_values("Визиты", ascending=False).iloc[1:11]
+df.sort_values("Визиты", ascending=False)
 
 #Топ 10 фильмов по просмотрам
 params = dict(
@@ -37,7 +37,7 @@ req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API
 
 df = pd.read_csv(StringIO(req.text))
 
-df.sort_values("Просмотры", ascending=False).iloc[1:11]
+df.sort_values("Просмотры", ascending=False)
 
 #Топ 10 жанров по визитам
 params = dict(
@@ -64,7 +64,7 @@ new_df = pd.DataFrame(new_rows)
 result_df = new_df.groupby('Жанр', as_index=False)['Визиты'].sum()
 
 
-result_df.sort_values("Визиты", ascending=False).iloc[1:11]
+result_df.sort_values("Визиты", ascending=False)
 
 #Топ 10 жанров по просмотрам
 params = dict(
@@ -91,7 +91,7 @@ new_df = pd.DataFrame(new_rows)
 result_df = new_df.groupby('Жанр', as_index=False)['Просмотры'].sum()
 
 
-result_df.sort_values("Просмотры", ascending=False).iloc[1:11]
+result_df.sort_values("Просмотры", ascending=False)
 
 #Конверсия
 params = dict(
@@ -106,7 +106,7 @@ req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API
 df = pd.read_csv(StringIO(req.text))
 
 df['Конверсия'] = df['Посетители, посмотревшие товар']/df['Визиты']
-df.sort_values('Конверсия', ascending=False)[['Название товара', 'Конверсия']].iloc[1:11]
+df.sort_values('Конверсия', ascending=False)[['Название товара', 'Конверсия']]
 
 #Топ 10 фильмов по просмотревшим пользователям
 params = dict(
@@ -120,7 +120,7 @@ req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API
 
 df = pd.read_csv(StringIO(req.text))
 
-df.sort_values("Посетители, посмотревшие товар", ascending=False).iloc[1:11]
+df.sort_values("Посетители, посмотревшие товар", ascending=False)
 
 
 #Топ жанров по конверсии(средняя по всем записям жанра)
@@ -150,7 +150,7 @@ new_df = pd.DataFrame(new_rows)
 result_df = new_df.groupby('Жанр', as_index=False).agg({'Просмотры': 'sum', 'Конверсия': 'mean'})
 
 
-result_df.sort_values("Конверсия", ascending=False).iloc[1:11]
+result_df.sort_values("Конверсия", ascending=False)
 
 #ID товаров популярных по кликам и просмотрам
 def get_ids(date1, date2):
@@ -163,7 +163,7 @@ def get_ids(date1, date2):
     )
     req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
     df = pd.read_csv(StringIO(req.text))
-    df.sort_values("Визиты", ascending=False)['ID товара'].iloc[1:16]
+    df.sort_values("Визиты", ascending=False)['ID товара']
     vis_df = df
 
     params = dict(
@@ -175,13 +175,10 @@ def get_ids(date1, date2):
     )
     req = requests.get(API_URL, params=params, headers={'Authorization':f'OAuth {API_TOKEN}'})
     df = pd.read_csv(StringIO(req.text))
-    df.sort_values("Просмотры", ascending=False)['ID товара'].iloc[1:16]
+    df.sort_values("Просмотры", ascending=False)['ID товара']
     views_df = df
 
     output_ids = []
 
-    for i in range(len(views_df)):
-        output_ids.append(vis_df[i])
-        output_ids.append(views_df[i])
-    output_ids = list(set(output_ids))
+    output_ids = list(set(vis_df['ID товара'].iloc[1:16].tolist() + views_df['ID товара'].iloc[1:16].tolist()))
     return output_ids
