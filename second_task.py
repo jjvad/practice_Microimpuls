@@ -1,18 +1,23 @@
-import requests
+import requests, math
 import pandas as pd
-from io import StringIO
 from config import smarty_query, kp_TOKEN
 import json
 from first_task import get_ids
+from lxml import etree
 
-def get_query_smarty():
+#получение соответсвия id в smarty и кинопоиске
+def get_query_smarty(reverse = 0):
     response = json.loads((requests.get(smarty_query)).text)
     df = pd.DataFrame.from_dict(response['videos'])
     df = df.drop(['name', 'name_orig', 'thumbnail_big', 'year', 'countries', 'screenshot_big'], axis=1)
-    return df
+    if reverse == 0:
+        return df.set_index('id').T.to_dict('list')
+    else:
+        return df.set_index('kinopoisk_id').T.to_dict('list')
 
-id_dict = get_query_smarty().set_index('id').T.to_dict('list')
+id_dict = get_query_smarty()
 
+#получение соответсвующих id для кинопоиска
 def get_id_to_kinopoisk(ids, dict):
     result = []
     for i in ids:
@@ -24,17 +29,87 @@ def get_id_to_kinopoisk(ids, dict):
 id_to_find = get_ids("6daysAgo", "today")
 id_in_kinopoisk = get_id_to_kinopoisk(id_to_find, id_dict)
 
+#получение похожих фильмов на кинопоиске
 def get_similar_films_ids(target_id):
     url = "https://api.kinopoisk.dev/v1.4/movie?page=1&limit=10&selectFields=id&selectFields=similarMovies&selectFields=name&id=" + target_id
     headers = {
         "accept": "application/json",
-        "X-API-KEY": "66GD38Z-X16M6RT-NEB429K-B1YA0QH"
+        "X-API-KEY": kp_TOKEN
     }
     response = requests.get(url, headers=headers)
     result = []
-    for i in range(len(response.json()['docs'][0]["similarMovies"])):
-        result.append(response.json()['docs'][0]["similarMovies"][i]['id'])
+    if "similarMovies" in response.json()['docs'][0]:
+        for i in range(len(response.json()['docs'][0]["similarMovies"])):
+            result.append(response.json()['docs'][0]["similarMovies"][i]['id'])
+        return result
+    else:
+        return result
 
-    print(result)
+#получение всех рекомендованных фильмов
+def get_similar_films_for_recomendation(list_ids):
+    result = []
+    for id in list_ids:
+        result += get_similar_films_ids(id)
+    return list(set(result))
 
-get_similar_films_ids('326')
+similar_films = get_similar_films_for_recomendation(id_in_kinopoisk)
+
+#получение рейтинга фильма
+def get_rating(id):
+    url = f"https://rating.kinopoisk.ru/{id}.xml"
+    response = etree.fromstring(requests.get(url).text.encode())
+    # XPath возвращает список, проверяем его длину
+    kp_rating = response.xpath("//kp_rating/text()")
+    kp_votes = response.xpath("//kp_rating/@num_vote")
+
+    imdb_rating = response.xpath("//imdb_rating/text()")
+    imdb_votes = response.xpath("//imdb_rating/@num_vote")
+
+    # Берём первый элемент, если он есть, иначе ставим заглушку
+    kp_rating = kp_rating[0] if kp_rating else 0
+    kp_votes = kp_votes[0] if kp_votes else 0
+
+    imdb_rating = imdb_rating[0] if imdb_rating else 0
+    imdb_votes = imdb_votes[0] if imdb_votes else 0
+    result = [[float(kp_rating), int(kp_votes)], [float(imdb_rating), int(imdb_votes)], id]
+    return result
+
+#получение рейтинга к каждому фильму
+def get_rates_for_recommendation(list_ids):
+    result = []
+    for id in list_ids:
+        result.append(get_rating(id))
+    return result
+
+#формула для оценки рейтинга
+def wilson_score(avg_rating, num_ratings, z=1.96):
+    if num_ratings == 0:
+        return 0.0
+    p = (avg_rating - 1) / 9
+    denominator = 1 + z ** 2 / num_ratings
+    centre = (p + z ** 2 / (2 * num_ratings)) / denominator
+    margin = z * math.sqrt((p * (1 - p) + z ** 2 / (4 * num_ratings)) / num_ratings)
+    lower_bound = centre - margin
+    return lower_bound
+
+#применение формулы к рейтингу каждого фильма
+def get_rated_list(id_list, choosen_platform = 0):
+    result = []
+    for item in id_list:
+        result.append([wilson_score(item[choosen_platform][0], item[choosen_platform][1], 1.282), item[2]])
+    return result
+
+#сортировка
+def sort_by_rating(rated_list):
+    return sorted(rated_list, reverse=True)
+
+#получение id на смарти
+def get_smarty_ids(sorted_list, id_dict):
+    result = []
+    for item in sorted_list:
+        if item[1] in id_dict.keys():
+            result.append([id_dict[item[1]][0] , item[0]])
+    return result
+
+print(get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(similar_films))), get_query_smarty(1)))
+
