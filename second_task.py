@@ -112,4 +112,3 @@ def get_smarty_ids(sorted_list, id_dict):
     return result
 
 print(get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(similar_films))), get_query_smarty(1)))
-
