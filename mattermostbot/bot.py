@@ -1,6 +1,6 @@
 from mmpy_bot import Bot, Settings
 from plugins.UI_plugins import UIPlugin
-from plugins.hint import Hint
+from plugins.hint_plugin import Hint
 from plugins.sets_plugin import SetPlugin
 from config import M_url, M_port, BOT_TEAM, BOT_TOKEN
 

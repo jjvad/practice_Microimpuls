@@ -153,7 +153,7 @@ result_df = new_df.groupby('Жанр', as_index=False).agg({'Просмотры'
 result_df.sort_values("Конверсия", ascending=False)
 
 #ID товаров популярных по кликам и просмотрам
-def get_ids(date1, date2):
+def get_ids(date1, date2, count = 30):
     params = dict(
         date1=date1,
         date2=date2,
@@ -180,5 +180,5 @@ def get_ids(date1, date2):
 
     output_ids = []
 
-    output_ids = list(set(vis_df['ID товара'].iloc[1:16].tolist() + views_df['ID товара'].iloc[1:16].tolist()))
+    output_ids = list(set(vis_df['ID товара'].iloc[1:int(count/2)].tolist() + views_df['ID товара'].iloc[1:int(count/2)].tolist()))
     return output_ids

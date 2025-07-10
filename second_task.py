@@ -15,8 +15,6 @@ def get_query_smarty(reverse = 0):
     else:
         return df.set_index('kinopoisk_id').T.to_dict('list')
 
-id_dict = get_query_smarty()
-
 #получение соответсвующих id для кинопоиска
 def get_id_to_kinopoisk(ids, dict):
     result = []
@@ -25,9 +23,6 @@ def get_id_to_kinopoisk(ids, dict):
             if dict[int(i)][0] != '':
                 result.append(str(dict[int(i)][0]))
     return result
-
-id_to_find = get_ids("6daysAgo", "today")
-id_in_kinopoisk = get_id_to_kinopoisk(id_to_find, id_dict)
 
 #получение похожих фильмов на кинопоиске
 def get_similar_films_ids(target_id):
@@ -51,8 +46,6 @@ def get_similar_films_for_recomendation(list_ids):
     for id in list_ids:
         result += get_similar_films_ids(id)
     return list(set(result))
-
-similar_films = get_similar_films_for_recomendation(id_in_kinopoisk)
 
 #получение рейтинга фильма
 def get_rating(id):
@@ -111,4 +104,21 @@ def get_smarty_ids(sorted_list, id_dict):
             result.append([id_dict[item[1]][0] , item[0]])
     return result
 
-print(get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(similar_films))), get_query_smarty(1)))
+def get_views_list(count = 30):
+    return get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(
+        get_similar_films_for_recomendation(get_id_to_kinopoisk(get_ids("6daysAgo", "today", count),
+                                                                get_query_smarty()))))), get_query_smarty(1))
+
+def get_names(id_list):
+    result = []
+    response = json.loads((requests.get(smarty_query)).text)
+    df = pd.DataFrame.from_dict(response['videos'])
+    df = df.drop(['name_orig', 'thumbnail_big', 'year', 'countries', 'screenshot_big'], axis=1)
+    dict = df.set_index('id').T.to_dict('list')
+    for item in id_list:
+        result.append([dict[item[0]][0], round(item[1], 3), item[0], dict[item[0]][-1]])
+    return result
+
+#print(get_names(get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(
+        #get_similar_films_for_recomendation(get_id_to_kinopoisk(get_ids("6daysAgo", "today"),
+                                                                #get_query_smarty()))))), get_query_smarty(1))))
