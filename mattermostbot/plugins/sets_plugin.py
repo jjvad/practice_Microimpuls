@@ -19,13 +19,17 @@ class SetPlugin(Plugin):
         return True
 
     @listen_to(r"^!подборка (?P<settype>\S+)(?:\s+(?P<count>\S+))?(?:\s+(?P<file>\S+))?$")
-    def out_set(self, message, settype, count = 30, file = 0):
+    def out_set(self, message, settype, count = '30', file = 0):
+        if count == None:
+            count = '30'
+        if file == None:
+            file = 0
         message.is_processed = True
         if settype == 'рейтинг':
             if int(count) >= 10:
                 data = get_views_list(count=int(count))
                 data = get_names(data)
-                if file == 0:
+                if int(file) == 0:
                     table_rows = [f"| {item[0]} | {item[1]} |" for item in data]
                     table = "\n".join(table_rows)
 
