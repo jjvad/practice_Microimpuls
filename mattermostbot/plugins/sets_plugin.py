@@ -1,9 +1,10 @@
 from mmpy_bot import Plugin, listen_to
-
+import matplotlib.pyplot as plt
 from config import BOT_TOKEN
 from second_task import get_names, get_views_list
-from io import StringIO
+from io import StringIO, BytesIO
 from pathlib import Path
+import pandas as pd
 import csv, os, re, requests
 
 class SetPlugin(Plugin):
@@ -22,37 +23,53 @@ class SetPlugin(Plugin):
     def out_set(self, message, settype, count = '30', file = 0):
         if count == None:
             count = '30'
-        if file == None:
+        if file == None or file == '0':
             file = 0
         message.is_processed = True
         if settype == 'рейтинг':
-            if int(count) >= 10:
-                data = get_views_list(count=int(count))
-                data = get_names(data)
-                if int(file) == 0:
-                    table_rows = [f"| {item[0]} | {item[1]} |" for item in data]
-                    table = "\n".join(table_rows)
+            try:
+                if int(count) >= 10:
+                    data = get_views_list(count=int(count))
+                    data = get_names(data)
+                    if not file:
+                        img_buffer = self.generate_table_image(data)
 
+                        # Отправка файла через API
+                        self._upload_file(
+                            channel_id=message.channel_id,
+                            content=img_buffer.getvalue(),  # Бинарные данные изображения
+                            filename=f"top_{count}_ratings.png"
+                        )
+                        '''table_rows = [f"| {item[0]} | {item[1]} |" for item in data]
+                        table = "\n".join(table_rows)
+
+                        self.driver.create_post(
+                            channel_id=message.channel_id,
+                            message=f"📊 **Топ рейтинга:**\n```\n{table}\n```"
+                        )'''
+                    else:
+                        csv_buffer = StringIO()
+                        writer = csv.writer(csv_buffer)
+                        writer.writerow(["Название", "Оценка", "ID1", "ID2"])
+                        writer.writerows(data)
+
+                        # Отправка файла через API
+                        self._upload_file(
+                            channel_id=message.channel_id,
+                            content=csv_buffer.getvalue(),
+                            filename=f"top_{count}_ratings.csv"
+                        )
+                else:
                     self.driver.create_post(
                         channel_id=message.channel_id,
-                        message=f"📊 **Топ рейтинга:**\n```\n{table}\n```"
+                        message=f"Размер выборки не может быть менее 10"
                     )
-                else:
-                    csv_buffer = StringIO()
-                    writer = csv.writer(csv_buffer)
-                    writer.writerow(["Название", "Оценка", "ID1", "ID2"])
-                    writer.writerows(data)
-
-                    # Отправка файла через API
-                    self._upload_file(
-                        channel_id=message.channel_id,
-                        content=csv_buffer.getvalue(),
-                        filename=f"top_{count}_ratings.csv"
-                    )
-            else:
+                    self.show_help(message)
+            except Exception as e:
+                print(e)
                 self.driver.create_post(
                     channel_id=message.channel_id,
-                    message=f"Размер выборки не может быть менее 10"
+                    message=f"Третий параметр(размер выборки) должен быть целым числом >= 10."
                 )
                 self.show_help(message)
         else:
@@ -103,7 +120,34 @@ class SetPlugin(Plugin):
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "Authorization": "Bearer zbidht5hxjbm7cpj46gxzctfzy"
+            "Authorization": f"Bearer {BOT_TOKEN}"
         }
 
         response = requests.post(url, data=payload, headers=headers, params=querystring)
+
+    def generate_table_image(self, data):
+        """Генерация изображения таблицы в буфер"""
+        # Создаем фигуру
+        fig, ax = plt.subplots(figsize=(10, len(data) * 0.3))
+        ax.axis('off')
+
+        # Создаем таблицу
+        table = ax.table(
+            cellText=[[item[0], item[1]] for item in data],
+            colLabels=["Название", "Оценка"],
+            cellLoc='center',
+            loc='center'
+        )
+
+        # Настройка стиля
+        table.auto_set_font_size(False)
+        table.set_fontsize(15)
+        table.scale(1.2, 1.8)
+
+        # Сохраняем в буфер
+        img_buffer = BytesIO()
+        plt.savefig(img_buffer, format='png', bbox_inches='tight', dpi=160)
+        img_buffer.seek(0)
+        plt.close()
+
+        return img_buffer
