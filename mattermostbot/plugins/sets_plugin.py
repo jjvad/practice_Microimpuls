@@ -3,15 +3,12 @@ import matplotlib.pyplot as plt
 from config import BOT_TOKEN
 from second_task import get_names, get_views_list
 from io import StringIO, BytesIO
+from .interval_plugin import Interval
 from pathlib import Path
 import pandas as pd
 import csv, os, re, requests
 
 class SetPlugin(Plugin):
-
-    def __init__(self):
-        self.tmp_dir = Path("tmp")
-        self.tmp_dir.mkdir(exist_ok=True)
 
     @listen_to("^!подборка$")
     def standart_command(self, message):
@@ -26,10 +23,11 @@ class SetPlugin(Plugin):
         if file == None or file == '0':
             file = 0
         message.is_processed = True
+        interval = Interval().time_to_query
         if settype == 'рейтинг':
             try:
                 if int(count) >= 10:
-                    data = get_views_list(count=int(count))
+                    data = get_views_list(date1 = interval[0], date2 = interval[1], count=int(count))
                     data = get_names(data)
                     if not file:
                         img_buffer = self.generate_table_image(data)
@@ -146,7 +144,7 @@ class SetPlugin(Plugin):
 
         # Сохраняем в буфер
         img_buffer = BytesIO()
-        plt.savefig(img_buffer, format='png', bbox_inches='tight', dpi=160)
+        plt.savefig(img_buffer, format='png', bbox_inches='tight', dpi=300)
         img_buffer.seek(0)
         plt.close()
 

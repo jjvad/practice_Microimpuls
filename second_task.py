@@ -104,9 +104,9 @@ def get_smarty_ids(sorted_list, id_dict):
             result.append([id_dict[item[1]][0] , item[0]])
     return result
 
-def get_views_list(count = 30):
+def get_views_list(date1, date2, count = 30):
     return get_smarty_ids(sort_by_rating(get_rated_list(get_rates_for_recommendation(
-        get_similar_films_for_recomendation(get_id_to_kinopoisk(get_ids("6daysAgo", "today", count),
+        get_similar_films_for_recomendation(get_id_to_kinopoisk(get_ids(date1, date2, count),
                                                                 get_query_smarty()))))), get_query_smarty(1))
 
 def get_names(id_list):

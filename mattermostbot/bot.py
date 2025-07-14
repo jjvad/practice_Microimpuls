@@ -2,6 +2,7 @@ from mmpy_bot import Bot, Settings
 from plugins.UI_plugins import UIPlugin
 from plugins.hint_plugin import Hint
 from plugins.sets_plugin import SetPlugin
+from plugins.interval_plugin import Interval
 from config import M_url, M_port, BOT_TEAM, BOT_TOKEN
 
 bot = Bot(
@@ -12,7 +13,7 @@ bot = Bot(
         BOT_TEAM=BOT_TEAM,
         SSL_VERIFY=True,
     ),
-    plugins=[UIPlugin(), SetPlugin(), Hint()],
+    plugins=[UIPlugin(), SetPlugin(), Interval(), Hint()],
 )
 
 if __name__ == "__main__":
