@@ -2,7 +2,7 @@ import requests, math
 import pandas as pd
 from config import smarty_query, kp_TOKEN
 import json
-from first_task import get_ids
+from Y_metrica_query import get_ids
 from lxml import etree
 
 #получение соответсвия id в smarty и кинопоиске

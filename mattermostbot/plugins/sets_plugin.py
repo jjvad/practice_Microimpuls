@@ -1,7 +1,7 @@
 from mmpy_bot import Plugin, listen_to
 import matplotlib.pyplot as plt
 from config import BOT_TOKEN
-from second_task import get_names, get_views_list
+from generate_set import get_names, get_views_list
 from io import StringIO, BytesIO
 from .interval_plugin import Interval
 from pathlib import Path
