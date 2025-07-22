@@ -25,7 +25,7 @@ def get_id_to_kinopoisk(ids, dict):
     return result
 
 #получение похожих фильмов на кинопоиске
-def get_similar_films_ids(target_id):
+def get_similar_films_ids(target_id, kp_TOKEN):
     url = "https://api.kinopoisk.dev/v1.4/movie?page=1&limit=10&selectFields=id&selectFields=similarMovies&selectFields=name&id=" + target_id
     headers = {
         "accept": "application/json",
@@ -33,18 +33,32 @@ def get_similar_films_ids(target_id):
     }
     response = requests.get(url, headers=headers)
     result = []
-    if "similarMovies" in response.json()['docs'][0]:
-        for i in range(len(response.json()['docs'][0]["similarMovies"])):
-            result.append(response.json()['docs'][0]["similarMovies"][i]['id'])
-        return result
-    else:
-        return result
+    try:
+        if "similarMovies" in response.json()['docs'][0]:
+            for i in range(len(response.json()['docs'][0]["similarMovies"])):
+                result.append(response.json()['docs'][0]["similarMovies"][i]['id'])
+            return result
+        else:
+            return result
+    except:
+        return 1
 
 #получение всех рекомендованных фильмов
 def get_similar_films_for_recomendation(list_ids):
     result = []
+    token_id = 0
     for id in list_ids:
-        result += get_similar_films_ids(id)
+        preresult = get_similar_films_ids(id, kp_TOKEN[token_id])
+        if preresult == 1 and token_id < 3:
+            while preresult == 1 and token_id < 3:
+                token_id += 1
+                preresult = get_similar_films_ids(id, kp_TOKEN[token_id])
+            if preresult != 1:
+                result += preresult
+        elif preresult == 1 and token_id == 3:
+            return list(set(result))
+        else:
+            result += preresult
     return list(set(result))
 
 #получение рейтинга фильма

@@ -29,6 +29,12 @@ class SetPlugin(Plugin):
                 if int(count) >= 10:
                     data = get_views_list(date1 = interval[0], date2 = interval[1], count=int(count))
                     data = get_names(data)
+                    if len(data) == 0:
+                        self.driver.create_post(
+                            channel_id=message.channel_id,
+                            message="Достигнут лимит запросов к кинопоиску на сегодня"
+                        )
+                        return True
                     if not file:
                         img_buffer = self.generate_table_image(data)
 
