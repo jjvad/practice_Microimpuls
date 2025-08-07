@@ -1,17 +1,17 @@
-### practice_Microimpuls
+# practice_Microimpuls
 
 ## Инструкция
 
-# Предварительные требования
+### Предварительные требования
 pyton 3.10+
 
-# Клонирование репозитория
+### Клонирование репозитория
 `git clone https://github.com/jjvad/practice_Microimpuls.git`
 
-# Установка зависимостей
+### Установка зависимостей
 `pip install -r requirements.txt`
 
-# config.py
+### config.py
 API_TOKEN: Токен для ЯндексМетрики
 id_counter: ID счётчика яндекс метрики
 smarty_query: Запрос к API Smarty
@@ -21,9 +21,9 @@ M_port: Порт Mattermost чата
 BOT_TOKEN: Токен Mattermost бота
 BOT_TEAM: Имя команды Mattermost
 
-# Запуск проекта
+### Запуск проекта
 `python bot.py`
 
-# Использование бота
+### Использование бота
 Бот поддерживает коману `!help` для вывода доступных команд
 **Запрос может выполнятся от 20 секунд до пары минут** 
