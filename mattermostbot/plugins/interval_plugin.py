@@ -1,5 +1,4 @@
 from mmpy_bot import Plugin, listen_to
-import re
 
 class Interval(Plugin):
     _instance = None

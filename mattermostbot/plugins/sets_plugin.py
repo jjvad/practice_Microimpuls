@@ -4,9 +4,7 @@ from config import BOT_TOKEN
 from generate_set import get_names, get_views_list
 from io import StringIO, BytesIO
 from .interval_plugin import Interval
-from pathlib import Path
-import pandas as pd
-import csv, os, re, requests
+import csv, requests
 
 class SetPlugin(Plugin):
 

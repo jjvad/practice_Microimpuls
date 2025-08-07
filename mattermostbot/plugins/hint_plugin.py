@@ -1,5 +1,4 @@
 from mmpy_bot import Plugin, listen_to
-import re
 
 class Hint(Plugin):
     @listen_to(".*")

@@ -1,6 +1,5 @@
 config.py
 test.py
-*.txt
 .idea
 .venv
 __pycache__
