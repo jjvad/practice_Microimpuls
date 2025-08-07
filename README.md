@@ -12,14 +12,14 @@ pyton 3.10+
 `pip install -r requirements.txt`
 
 ### config.py
-API_TOKEN: Токен для ЯндексМетрики
-id_counter: ID счётчика яндекс метрики
-smarty_query: Запрос к API Smarty
-kp_TOKEN: Список токенов для кинопоиска(>=1)
-M_url: URL Mattermost чата
-M_port: Порт Mattermost чата
-BOT_TOKEN: Токен Mattermost бота
-BOT_TEAM: Имя команды Mattermost
+API_TOKEN: Токен для ЯндексМетрики  
+id_counter: ID счётчика яндекс метрики  
+smarty_query: Запрос к API Smarty  
+kp_TOKEN: Список токенов для кинопоиска(>=1)  
+M_url: URL Mattermost чата  
+M_port: Порт Mattermost чата  
+BOT_TOKEN: Токен Mattermost бота  
+BOT_TEAM: Имя команды Mattermost  
 
 ### Запуск проекта
 `python bot.py`
